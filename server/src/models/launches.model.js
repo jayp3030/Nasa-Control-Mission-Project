@@ -19,8 +19,6 @@ const launch = {
 
 saveLaunch(launch);
 
-// launches.set(launch.flightNumber , launch);
-
 function existLaunchWithId(launchId){
     return launches.has(launchId);
 }
@@ -29,8 +27,8 @@ async function getAllLaunches(){
     return await launchesDatabase.find({} , { '_id': 0 , '__v':0});
 }
 
-async function getLatestFlighNum(){
-    const latestLaunch = await launches.findOne().sort('-flightNumber');
+async function getLatestFlightNum(){
+    const latestLaunch = await launchesDatabase.findOne().sort('-flightNumber');
 
     if (!latestLaunch) {
         return DEFAULT_FLIGHT_NUMBER;
@@ -40,7 +38,7 @@ async function getLatestFlighNum(){
 }
 
 async function saveLaunch(launch){
-
+    console.log(launch.target);
     const planet = await planets.findOne({
         keplerName : launch.target,
     })
@@ -56,16 +54,18 @@ async function saveLaunch(launch){
     })
 }
 
-function addNewLaunch(launch){
+async function scheduleNewLaunch(launch){
 
-    latestFlightNumber++;
-    launches.set(latestFlightNumber, Object.assign(launch , {
+    const newFlightNum = await getLatestFlightNum()+1;
 
-        flightNumber : latestFlightNumber,
-        customer : ['NASA' , 'SpaceX'],
+    const newLauch = Object.assign(launch,{
         upcoming : true,
-        success : true
-    }));
+        success : true,
+        customer : ['NASA'],
+        flightNumber : newFlightNum,
+    })
+
+    await saveLaunch(newLauch);
 }
 
 function abortLaunchById(launchId){
@@ -79,7 +79,7 @@ function abortLaunchById(launchId){
 module.exports ={
     existLaunchWithId,
     getAllLaunches,
-    addNewLaunch,
+    scheduleNewLaunch,
     abortLaunchById
 
 }
